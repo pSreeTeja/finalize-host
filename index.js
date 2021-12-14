@@ -78,7 +78,7 @@ app.post("/login", async (req, res) => {
       res.cookie("jwtoken", token, {
         maxAge: 1 * 24 * 60 * 60 * 1000,
         httpOnly: true,
-        domain: "connectingworld-api.herokuapp.com",
+        domain: "finalize.herokuapp.com",
         secure: true,
         sameSite: "none",
       });
