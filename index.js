@@ -76,7 +76,11 @@ app.post("/login", async (req, res) => {
       const token = jwt.sign({ _id: user._id }, process.env.SECRET_KEY);
       // console.log(token);
       res.cookie("jwtoken", token, {
+        maxAge: 1 * 24 * 60 * 60 * 1000,
         httpOnly: true,
+        domain: "connectingworld-api.herokuapp.com",
+        secure: true,
+        sameSite: "none",
       });
       res.status(200).send();
     } else {
