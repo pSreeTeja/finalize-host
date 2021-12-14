@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="21.783" height="27.591" viewBox="0 0 21.783 27.591">
+  <g id="Group_786" data-name="Group 786" transform="translate(-91.717 -34.838)">
+    <g id="icons8-file" transform="translate(91.717 34.838)">
+      <path id="Path_692" data-name="Path 692" d="M30.783,12.987V31.139a1.452,1.452,0,0,1-1.452,1.452H10.452A1.452,1.452,0,0,1,9,31.139V6.452A1.452,1.452,0,0,1,10.452,5H22.8Z" transform="translate(-9 -5)"/>
+      <path id="Path_693" data-name="Path 693" d="M28,5v6.535a1.452,1.452,0,0,0,1.452,1.452h6.535Z" transform="translate(-14.204 -5)" fill="#919191"/>
+    </g>
+    <path id="Path_718" data-name="Path 718" d="M11.2,16.587l3.046,3.046L21.179,12.7" transform="translate(86.419 32.467)" fill="none" stroke="#fff" stroke-miterlimit="10" stroke-width="3"/>
+  </g>
+</svg>

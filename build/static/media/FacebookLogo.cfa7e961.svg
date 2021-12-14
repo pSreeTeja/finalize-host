@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="17" height="17" viewBox="0 0 17 17">
+  <defs>
+    <clipPath id="clip-path">
+      <path id="Path_27" data-name="Path 27" d="M14.725-147.983H13.8v-.646c0-.243.152-.3.259-.3h.654V-150l-.9,0a1.184,1.184,0,0,0-1.228,1.306v.711H12v1.1h.579v3.112H13.8v-3.112h.822Z" transform="translate(-12 150)" fill="none" clip-rule="evenodd"/>
+    </clipPath>
+    <clipPath id="clip-path-2">
+      <path id="Path_26" data-name="Path 26" d="M-1301-3742.1h871.932V-7045H-1301Z" transform="translate(1301 7045)" fill="none"/>
+    </clipPath>
+  </defs>
+  <g id="Facebook" transform="translate(0 0.03)">
+    <g id="Group_788" data-name="Group 788">
+      <circle id="Ellipse_16" data-name="Ellipse 16" cx="8.5" cy="8.5" r="8.5" transform="translate(0 -0.03)" fill="#3a5897"/>
+      <g id="Group_64" data-name="Group 64" transform="translate(7.138 5.356)" clip-path="url(#clip-path)">
+        <g id="Group_63" data-name="Group 63" transform="translate(-596.275 -3131.237)" clip-path="url(#clip-path-2)">
+          <path id="Path_25" data-name="Path 25" d="M7-155h7.266v10.769H7Z" transform="translate(587.004 3283.966)" fill="#fff"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>
