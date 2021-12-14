@@ -84,10 +84,10 @@ app.post("/login", async (req, res) => {
       });
       res.status(200).send();
     } else {
-      // res.status(401).send();
+      res.status(401).send();
     }
   } catch (err) {
-    // res.status(401).send();
+    res.status(401).send();
   }
 });
 app.get("/data", authenticate, (req, res) => {
