@@ -302,9 +302,7 @@ app.post("/deletegroup", authenticate, async (req, res) => {
 
   res.status(200).send();
 });
-if (process.env.NODE_ENV == "production") {
-  app.use(express.static("frontend/build"));
-}
+
 app.listen(process.env.PORT || 3001, () => {
   console.log("Server started");
 });
