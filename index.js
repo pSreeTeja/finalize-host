@@ -29,6 +29,9 @@ const transporter = nodemailer.createTransport({
     secureProtocol: "TLSv1_method",
   },
 });
+app.get("/", async (req, res) => {
+  res.send("Hello");
+});
 app.post("/register", async (req, res) => {
   // console.log(JSON.stringify(req.body));
   try {
