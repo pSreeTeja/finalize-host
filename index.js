@@ -11,6 +11,14 @@ const ObjectId = require("mongodb").ObjectId;
 const secrets = require("./secret/secret");
 const nodemailer = require("nodemailer");
 require("dotenv").config();
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
 mongoose.connect(
   "mongodb+srv://dbms_finalize:finalize123@cluster0.5ndw9.mongodb.net/Finalize?retryWrites=true&w=majority",
   { useNewUrlParser: true }
