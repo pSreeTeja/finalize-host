@@ -124,8 +124,7 @@ app.post("/creategroupapi", authenticate, async (req, res) => {
       },
       {
         $set: {
-          link:
-            "http://finalize.herokuapp.com/invite/" + project._id.toString(),
+          link: "http://finalize.netlify.app/invite/" + project._id.toString(),
         },
       }
     );
