@@ -60,7 +60,7 @@ app.post("/register", async (req, res) => {
     });
     await user.save();
     console.log("OK");
-    res.send("OK");
+    res.status(201).send("OK");
   } catch (err) {
     res.send(err);
     console.log(err);
