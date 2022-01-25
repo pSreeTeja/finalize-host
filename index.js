@@ -94,7 +94,13 @@ app.get("/data", authenticate, (req, res) => {
   res.send(req.rootUser);
 });
 app.get("/logout", (req, res) => {
-  res.clearCookie("jwtoken", { path: "/" });
+  // res.clearCookie("jwtoken", { path: "/" });
+  res.cookie("jwtoken", "", {
+    maxAge: 1,
+    domain: "finalize.herokuapp.com",
+    secure: true,
+    sameSite: "none",
+  });
   res.status(200).send("Logged Out");
 });
 app.post("/forgotpassword", (req, res) => {});
