@@ -90,6 +90,14 @@ app.post("/login", async (req, res) => {
     res.status(401).send();
   }
 });
+app.get("/isAuthenticated", authenticate, (req, res) => {
+  if (req.status == 200) {
+    res.status = 200;
+    res.send();
+  }
+  res.status = 401;
+  res.send();
+});
 app.get("/data", authenticate, (req, res) => {
   res.send(req.rootUser);
 });
