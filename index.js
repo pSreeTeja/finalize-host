@@ -8,7 +8,7 @@ const UserModel = require("./models/user");
 const ProjectModel = require("./models/project");
 const authenticate = require("./middleware/authenticate");
 const ObjectId = require("mongodb").ObjectId;
-const secrets = require("./secret/secret");
+const key = require("./secret");
 const nodemailer = require("nodemailer");
 require("dotenv").config();
 app.use((req, res, next) => {
@@ -31,7 +31,7 @@ const transporter = nodemailer.createTransport({
   secure: false,
   auth: {
     user: "managemyworkhere@gmail.com",
-    pass: secrets.pass,
+    pass: key.pass,
   },
   tls: {
     rejectUnauthorized: false,
@@ -67,7 +67,6 @@ app.post("/register", async (req, res) => {
   }
 });
 app.post("/login", async (req, res) => {
-  // console.log("SECRET  :" + secrets.pass);
   try {
     const user = await UserModel.findOne({ email: req.body.email });
     // console.log("USER DETAILS");
@@ -132,7 +131,7 @@ app.post("/creategroupapi", authenticate, async (req, res) => {
       },
       {
         $set: {
-          link: "http://finalize.netlify.app/invite/" + project._id.toString(),
+          link: "https://finalize.netlify.app/invite/" + project._id.toString(),
         },
       }
     );
@@ -244,7 +243,7 @@ app.post("/updatestudentproject", authenticate, async (req, res) => {
         from: "managemyworkhere@gmail.com",
         to: req.body.email, //change afterwards
         subject: req.body.projectTitle,
-        text: "Your project is approved",
+        text: "Your Project is Approved",
       };
       transporter.sendMail(mailOptions, (err, info) => {
         console.log(err);
@@ -307,7 +306,7 @@ app.post("/rejectproject", authenticate, async (req, res) => {
       from: "managemyworkhere@gmail.com",
       to: req.body.email, //change afterwards
       subject: req.body.projectTitle,
-      text: "Your project is rejected. Please change the project title",
+      text: "Your project is rejected. Come up with something new and unique.",
     };
     transporter.sendMail(mailOptions, (err, info) => {
       console.log(err);
