@@ -8,7 +8,7 @@ const UserModel = require("./models/user");
 const ProjectModel = require("./models/project");
 const authenticate = require("./middleware/authenticate");
 const ObjectId = require("mongodb").ObjectId;
-const key = require("./secret");
+const key = require("./secret/secret");
 const nodemailer = require("nodemailer");
 require("dotenv").config();
 app.use((req, res, next) => {
