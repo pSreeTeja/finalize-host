@@ -1,4 +1,5 @@
 const express = require("express");
+const validator = require("email-validator");
 const app = express();
 // const cors = require("cors");
 const mongoose = require("mongoose");
@@ -52,15 +53,24 @@ app.post("/register", async (req, res) => {
         error: "Account already exists",
       });
     }
-    const user = new UserModel({
-      name: req.body.name,
-      email: req.body.email,
-      password: req.body.password,
-      isTeacher: req.body.isTeacher,
-    });
-    await user.save();
-    console.log("OK");
-    res.status(201).send("OK");
+    if (validator.validate(req.body.email)) {
+      const user = new UserModel({
+        name: req.body.name,
+        email: req.body.email,
+        password: req.body.password,
+        isTeacher: req.body.isTeacher,
+      });
+      await user.save();
+      console.log("OK");
+      res.status(201).send("OK");
+    } else {
+      return (
+        res.status(422).
+        json({
+          error: "Enter a valid Email Address",
+        })
+      );
+    }
   } catch (err) {
     res.send(err);
     console.log(err);
