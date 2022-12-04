@@ -64,12 +64,9 @@ app.post("/register", async (req, res) => {
       console.log("OK");
       res.status(201).send("OK");
     } else {
-      return (
-        res.status(422).
-        json({
-          error: "Enter a valid Email Address",
-        })
-      );
+      return res.status(422).json({
+        error: "Enter a valid Email Address",
+      });
     }
   } catch (err) {
     res.send(err);
