@@ -9,8 +9,8 @@ const UserModel = require("./models/user");
 const ProjectModel = require("./models/project");
 const authenticate = require("./middleware/authenticate");
 const ObjectId = require("mongodb").ObjectId;
-const secrets = require("./secret/secret");
-const nodemailer = require("nodemailer");
+// const secrets = require("./secret/secret");
+// const nodemailer = require("nodemailer");
 require("dotenv").config();
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -27,18 +27,18 @@ mongoose.connect(
 );
 app.use(express.json());
 app.use(cookieParser());
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  secure: false,
-  auth: {
-    user: "managemyworkhere@gmail.com",
-    pass: secrets.pass,
-  },
-  tls: {
-    rejectUnauthorized: false,
-    secureProtocol: "TLSv1_method",
-  },
-});
+// const transporter = nodemailer.createTransport({
+//   service: "gmail",
+//   secure: false,
+//   auth: {
+//     user: "managemyworkhere@gmail.com",
+//     pass: secrets.pass,
+//   },
+//   tls: {
+//     rejectUnauthorized: false,
+//     secureProtocol: "TLSv1_method",
+//   },
+// });
 app.get("/", async (req, res) => {
   res.send("Hello");
 });
