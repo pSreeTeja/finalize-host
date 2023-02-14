@@ -89,7 +89,7 @@ app.post("/login", async (req, res) => {
       res.cookie("jwtoken", token, {
         maxAge: 1 * 24 * 60 * 60 * 1000,
         httpOnly: true,
-        domain: "finalize.herokuapp.com",
+        domain: "https://cloudy-handbag-colt.cyclic.app",
         secure: true,
         sameSite: "none",
       });
