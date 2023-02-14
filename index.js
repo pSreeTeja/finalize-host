@@ -89,7 +89,7 @@ app.post("/login", async (req, res) => {
       res.cookie("jwtoken", token, {
         maxAge: 1 * 24 * 60 * 60 * 1000,
         httpOnly: true,
-        domain: "https://cloudy-handbag-colt.cyclic.app",
+        domain: "cloudy-handbag-colt.cyclic.app",
         secure: true,
         sameSite: "none",
       });
@@ -116,7 +116,7 @@ app.get("/logout", (req, res) => {
   // res.clearCookie("jwtoken", { path: "/" });
   res.cookie("jwtoken", "", {
     maxAge: 1,
-    domain: "finalize.herokuapp.com",
+    domain: "cloudy-handbag-colt.cyclic.app",
     secure: true,
     sameSite: "none",
   });
