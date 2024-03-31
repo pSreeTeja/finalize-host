@@ -9,7 +9,7 @@ const UserModel = require("./models/user");
 const ProjectModel = require("./models/project");
 const authenticate = require("./middleware/authenticate");
 const ObjectId = require("mongodb").ObjectId;
-// const secrets = require("./secret/secret");
+// const vars = require("./my_secret/my_secrets");
 // const nodemailer = require("nodemailer");
 require("dotenv").config();
 app.use((req, res, next) => {
@@ -36,7 +36,7 @@ app.use(cookieParser());
 //   secure: false,
 //   auth: {
 //     user: "managemyworkhere@gmail.com",
-//     pass: secrets.pass,
+//     pass: vars.pass,
 //   },
 //   tls: {
 //     rejectUnauthorized: false,
@@ -78,7 +78,7 @@ app.post("/register", async (req, res) => {
   }
 });
 app.post("/login", async (req, res) => {
-  // console.log("SECRET  :" + secrets.pass);
+  // console.log("SECRET  :" + vars.pass);
   try {
     const user = await UserModel.findOne({ email: req.body.email });
     // console.log("USER DETAILS");
