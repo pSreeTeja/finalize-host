@@ -1,2 +1,2 @@
 config.env
-secret
+/secret/secret.js
