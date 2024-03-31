@@ -15,7 +15,7 @@ const Authenticate = async (req, res, next) => {
     req.status = 200;
     next();
   } catch (err) {
-    res.status(401).send("unauthorized");
+    res.status(401).send("Unauthorized");
     console.log(err);
   }
 };

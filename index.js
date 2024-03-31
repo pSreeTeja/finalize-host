@@ -13,7 +13,9 @@ const ObjectId = require("mongodb").ObjectId;
 // const nodemailer = require("nodemailer");
 require("dotenv").config();
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "https://finalize.netlify.app");
+  const allowedOrigins = ['http://localhost:3000',"https://finalize.netlify.app"];
+  const incomingOrigin = req.headers.origin;
+  res.setHeader("Access-Control-Allow-Origin", incomingOrigin);
   res.setHeader("Access-Control-Allow-Credentials", true);
   res.setHeader(
     "Access-Control-Allow-Headers",

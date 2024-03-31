@@ -1,2 +1,2 @@
-config.env
-/vars/vars.js
+my_secret
+node_modules
