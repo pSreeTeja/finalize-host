@@ -113,6 +113,7 @@ app.post("/login", async (req, res) => {
     const user = userResult.rows[0];
     console.log("USER DETAILS");
     console.log(user);
+    console.log(req.body)
     if (user && user.password == req.body.password) {
       // console.log(user);
       const token = jwt.sign({ _id: user.id }, process.env.SECRET_KEY);
