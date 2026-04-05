@@ -2,13 +2,13 @@ const express = require("express");
 const validator = require("email-validator");
 const app = express();
 // const cors = require("cors");
-const mongoose = require("mongoose");
+const pool = require("./db");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
-const UserModel = require("./models/user");
-const ProjectModel = require("./models/project");
+// const UserModel = require("./models/user");
+// const ProjectModel = require("./models/project");
 const authenticate = require("./middleware/authenticate");
-const ObjectId = require("mongodb").ObjectId;
+// const ObjectId = require("mongodb").ObjectId;
 // const vars = require("./my_secret/my_secrets");
 // const nodemailer = require("nodemailer");
 require("dotenv").config();
@@ -27,10 +27,37 @@ app.use((req, res, next) => {
   );
   next();
 });
-mongoose.connect(
-  "mongodb+srv://dbms_finalize:finalize123@cluster0.5ndw9.mongodb.net/Finalize?retryWrites=true&w=majority",
-  { useNewUrlParser: true }
-);
+
+// Initialize database tables
+const initDB = async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        is_teacher BOOLEAN DEFAULT FALSE,
+        data JSONB DEFAULT '[]'
+      );
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS projects (
+        id SERIAL PRIMARY KEY,
+        project_title VARCHAR(255) NOT NULL,
+        about_project TEXT NOT NULL,
+        project_deadline VARCHAR(255) NOT NULL,
+        link VARCHAR(255) NOT NULL,
+        submitted_data JSONB DEFAULT '[]'
+      );
+    `);
+    console.log('Database tables initialized');
+  } catch (err) {
+    console.error('Error initializing database:', err);
+  }
+};
+
+initDB();
 app.use(express.json());
 app.use(cookieParser());
 // const transporter = nodemailer.createTransport({
@@ -51,22 +78,17 @@ app.get("/", async (req, res) => {
 app.post("/register", async (req, res) => {
   // console.log(JSON.stringify(req.body));
   try {
-    const userExists = await UserModel.findOne({
-      email: req.body.email,
-    });
-    if (userExists) {
+    const userExists = await pool.query('SELECT * FROM users WHERE email = $1', [req.body.email]);
+    if (userExists.rows.length > 0) {
       return res.status(403).json({
         error: "Account already exists",
       });
     }
     if (validator.validate(req.body.email)) {
-      const user = new UserModel({
-        name: req.body.name,
-        email: req.body.email,
-        password: req.body.password,
-        isTeacher: req.body.isTeacher,
-      });
-      await user.save();
+      await pool.query(
+        'INSERT INTO users (name, email, password, is_teacher) VALUES ($1, $2, $3, $4)',
+        [req.body.name, req.body.email, req.body.password, req.body.isTeacher]
+      );
       console.log("OK");
       res.status(201).send("OK");
     } else {
@@ -82,16 +104,16 @@ app.post("/register", async (req, res) => {
 app.post("/login", async (req, res) => {
   // console.log("SECRET  :" + vars.pass);
   try {
-    const user = await UserModel.findOne({ email: req.body.email });
+    const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [req.body.email]);
+    const user = userResult.rows[0];
     // console.log("USER DETAILS");
-    if (user.password == req.body.password) {
+    if (user && user.password == req.body.password) {
       // console.log(user);
-      const token = jwt.sign({ _id: user._id }, process.env.SECRET_KEY);
+      const token = jwt.sign({ _id: user.id }, process.env.SECRET_KEY);
       // console.log(token);
       res.cookie("jwtoken", token, {
         maxAge: 1 * 24 * 60 * 60 * 1000,
         httpOnly: true,
-        domain: "cloudy-handbag-colt.cyclic.app",
         secure: true,
         sameSite: "none",
       });
@@ -118,7 +140,6 @@ app.get("/logout", (req, res) => {
   // res.clearCookie("jwtoken", { path: "/" });
   res.cookie("jwtoken", "", {
     maxAge: 1,
-    domain: "cloudy-handbag-colt.cyclic.app",
     secure: true,
     sameSite: "none",
   });
@@ -128,221 +149,183 @@ app.post("/forgotpassword", (req, res) => {});
 app.post("/creategroupapi", authenticate, async (req, res) => {
   // console.log(req.rootUser);
   // console.log(req.body);
-  const data_recv = {
-    projectTitle: req.body.projectTitle,
-    aboutProject: req.body.aboutProject,
-    projectDeadline: req.body.date,
-    link: req.body.link,
-    submittedData: [],
-  };
-  const project = new ProjectModel(data_recv);
-  project.save(async () => {
-    // console.log("CREATING NEW GROUP");
-    // console.log(project._id.toString());
-    const newProject = await ProjectModel.findOneAndUpdate(
-      {
-        _id: project._id.toString(),
-      },
-      {
-        $set: {
-          link: "http://finalize.netlify.app/invite/" + project._id.toString(),
-        },
-      }
+  try {
+    const result = await pool.query(
+      'INSERT INTO projects (project_title, about_project, project_deadline, link, submitted_data) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+      [req.body.projectTitle, req.body.aboutProject, req.body.date, '', []]
     );
-  });
-  // console.log("REQ.ROOTSUER.ID");
-  // console.log(req.rootUser.id);
-  const user = await UserModel.updateOne(
-    { _id: req.rootUser.id },
-    {
-      $push: { data: project._id },
-    }
-  );
-  res.status(200).send();
+    const projectId = result.rows[0].id;
+    await pool.query(
+      'UPDATE projects SET link = $1 WHERE id = $2',
+      [`http://finalize.netlify.app/invite/${projectId}`, projectId]
+    );
+    await pool.query(
+      'UPDATE users SET data = data || $1 WHERE id = $2',
+      [[projectId], req.rootUser.id]
+    );
+    res.status(200).send();
+  } catch (err) {
+    console.log(err);
+    res.status(500).send();
+  }
 });
 app.get("/displaygroups", authenticate, async (req, res) => {
   // console.log(req.rootUser);
-  const data_send = [];
-  for (let i = 0; i < req.rootUser.data.length; i++) {
-    const project = await ProjectModel.find({ _id: req.rootUser.data[i] });
-    data_send.push(project[0]);
+  try {
+    const data_send = [];
+    for (let i = 0; i < req.rootUser.data.length; i++) {
+      const projectResult = await pool.query('SELECT * FROM projects WHERE id = $1', [req.rootUser.data[i]]);
+      if (projectResult.rows.length > 0) {
+        data_send.push(projectResult.rows[0]);
+      }
+    }
+    // console.log(data_send);
+    res.status(200).send(data_send);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send();
   }
-  // console.log(data_send);
-  res.status(200).send(data_send);
 });
 
 app.post("/invite", authenticate, async (req, res) => {
   console.log("IN INVITE API");
-  const user = await UserModel.findOneAndUpdate(
-    { _id: req.rootUser.id },
-    { $push: { data: ObjectId(req.body.groupId) } }
-  );
-  res.status(200).send();
+  try {
+    await pool.query(
+      'UPDATE users SET data = data || $1 WHERE id = $2',
+      [[parseInt(req.body.groupId)], req.rootUser.id]
+    );
+    res.status(200).send();
+  } catch (err) {
+    console.log(err);
+    res.status(500).send();
+  }
 });
 app.post("/addstudentproject", authenticate, async (req, res) => {
   // console.log("RECEIVED FROM CLIENT");
   // console.log(req.body);
-  await ProjectModel.findOneAndUpdate(
-    { _id: ObjectId(req.body._id) },
-    {
-      $push: {
-        submittedData: {
-          email: req.body.email,
-          projectTitle: req.body.projectTitle,
-          abstract: req.body.abstract,
-          teamMem1: req.body.teamMem1,
-          teamMem2: req.body.teamMem2,
-          teamMem3: req.body.teamMem3,
-          teamMem4: req.body.teamMem4,
-          projectLink: req.body.projectLink,
-          didAdd: true,
-          isApproved: false,
-          completed: false,
-        },
-      },
-    }
-  ).then(console.log("update successful"));
-  res.status(200).send();
+  try {
+    const submission = {
+      email: req.body.email,
+      projectTitle: req.body.projectTitle,
+      abstract: req.body.abstract,
+      teamMem1: req.body.teamMem1,
+      teamMem2: req.body.teamMem2,
+      teamMem3: req.body.teamMem3,
+      teamMem4: req.body.teamMem4,
+      projectLink: req.body.projectLink,
+      didAdd: true,
+      isApproved: false,
+      completed: false,
+    };
+    await pool.query(
+      'UPDATE projects SET submitted_data = submitted_data || $1 WHERE id = $2',
+      [[submission], req.body._id]
+    );
+    res.status(200).send();
+  } catch (err) {
+    console.log(err);
+    res.status(500).send();
+  }
 });
 app.post("/updatestudentproject", authenticate, async (req, res) => {
-  if (req.body.isEditDetails) {
-    await ProjectModel.updateOne(
-      {
-        _id: ObjectId(req.body._id),
-        "submittedData.email": { $eq: req.body.email },
-      },
-      {
-        $set: {
-          "submittedData.$": {
-            email: req.body.email,
-            projectTitle: req.body.projectTitle,
-            abstract: req.body.abstract,
-            teamMem1: req.body.teamMem1,
-            teamMem2: req.body.teamMem2,
-            teamMem3: req.body.teamMem3,
-            teamMem4: req.body.teamMem4,
-            projectLink: req.body.projectLink,
-            didAdd: true,
-            isApproved: false,
-            completed: false,
-          },
-        },
-      }
-    );
-  } else {
-    await ProjectModel.updateOne(
-      {
-        _id: ObjectId(req.body._id),
-        "submittedData.email": { $eq: req.body.email },
-      },
-      {
-        $set: {
-          "submittedData.$": {
-            email: req.body.email,
-            projectTitle: req.body.projectTitle,
-            abstract: req.body.abstract,
-            teamMem1: req.body.teamMem1,
-            teamMem2: req.body.teamMem2,
-            teamMem3: req.body.teamMem3,
-            teamMem4: req.body.teamMem4,
-            projectLink: req.body.projectLink,
-            didAdd: true,
-            isApproved: true,
-            completed: false,
-          },
-        },
-      }
-    ).then(() => {
-      const mailOptions = {
-        from: "managemyworkhere@gmail.com",
-        to: req.body.email, //change afterwards
-        subject: req.body.projectTitle,
-        text: "Your project is approved",
+  try {
+    const projectResult = await pool.query('SELECT submitted_data FROM projects WHERE id = $1', [req.body._id]);
+    const submittedData = projectResult.rows[0].submitted_data;
+    const index = submittedData.findIndex(item => item.email === req.body.email);
+    if (index !== -1) {
+      submittedData[index] = {
+        email: req.body.email,
+        projectTitle: req.body.projectTitle,
+        abstract: req.body.abstract,
+        teamMem1: req.body.teamMem1,
+        teamMem2: req.body.teamMem2,
+        teamMem3: req.body.teamMem3,
+        teamMem4: req.body.teamMem4,
+        projectLink: req.body.projectLink,
+        didAdd: true,
+        isApproved: req.body.isEditDetails ? false : true,
+        completed: false,
       };
-      transporter.sendMail(mailOptions, (err, info) => {
-        console.log(err);
-      });
-    });
+      await pool.query(
+        'UPDATE projects SET submitted_data = $1 WHERE id = $2',
+        [JSON.stringify(submittedData), req.body._id]
+      );
+      if (!req.body.isEditDetails) {
+        // Send email if approved
+        // const mailOptions = { ... };
+        // transporter.sendMail...
+      }
+    }
+    res.status(200).send();
+  } catch (err) {
+    console.log(err);
+    res.status(500).send();
   }
-  res.status(200).send();
 });
 app.post("/submitProject", authenticate, async (req, res) => {
-  await ProjectModel.updateOne(
-    {
-      _id: ObjectId(req.body._id),
-      "submittedData.email": { $eq: req.body.email },
-    },
-    {
-      $set: {
-        "submittedData.$": {
-          email: req.body.email,
-          projectTitle: req.body.projectTitle,
-          abstract: req.body.abstract,
-          teamMem1: req.body.teamMem1,
-          teamMem2: req.body.teamMem2,
-          teamMem3: req.body.teamMem3,
-          teamMem4: req.body.teamMem4,
-          projectLink: req.body.projectLink,
-          didAdd: true,
-          isApproved: true,
-          completed: true,
-        },
-      },
+  try {
+    const projectResult = await pool.query('SELECT submitted_data FROM projects WHERE id = $1', [req.body._id]);
+    const submittedData = projectResult.rows[0].submitted_data;
+    const index = submittedData.findIndex(item => item.email === req.body.email);
+    if (index !== -1) {
+      submittedData[index] = {
+        email: req.body.email,
+        projectTitle: req.body.projectTitle,
+        abstract: req.body.abstract,
+        teamMem1: req.body.teamMem1,
+        teamMem2: req.body.teamMem2,
+        teamMem3: req.body.teamMem3,
+        teamMem4: req.body.teamMem4,
+        projectLink: req.body.projectLink,
+        didAdd: true,
+        isApproved: true,
+        completed: true,
+      };
+      await pool.query(
+        'UPDATE projects SET submitted_data = $1 WHERE id = $2',
+        [JSON.stringify(submittedData), req.body._id]
+      );
     }
-  );
-  res.status(200).send();
+    res.status(200).send();
+  } catch (err) {
+    console.log(err);
+    res.status(500).send();
+  }
 });
 app.post("/rejectproject", authenticate, async (req, res) => {
-  await ProjectModel.updateOne(
-    {
-      _id: ObjectId(req.body._id),
-      "submittedData.email": { $eq: req.body.email },
-    },
-    {
-      $pull: {
-        submittedData: {
-          email: req.body.email,
-          projectTitle: req.body.projectTitle,
-          abstract: req.body.abstract,
-          teamMem1: req.body.teamMem1,
-          teamMem2: req.body.teamMem2,
-          teamMem3: req.body.teamMem3,
-          teamMem4: req.body.teamMem4,
-          projectLink: req.body.projectLink,
-          didAdd: true,
-          isApproved: false,
-          completed: false,
-        },
-      },
-    }
-  ).then(() => {
-    const mailOptions = {
-      from: "managemyworkhere@gmail.com",
-      to: req.body.email, //change afterwards
-      subject: req.body.projectTitle,
-      text: "Your project is rejected. Please change the project title",
-    };
-    transporter.sendMail(mailOptions, (err, info) => {
-      console.log(err);
-    });
-  });
-  res.status(200).send();
+  try {
+    const projectResult = await pool.query('SELECT submitted_data FROM projects WHERE id = $1', [req.body._id]);
+    const submittedData = projectResult.rows[0].submitted_data;
+    const filteredData = submittedData.filter(item => item.email !== req.body.email);
+    await pool.query(
+      'UPDATE projects SET submitted_data = $1 WHERE id = $2',
+      [JSON.stringify(filteredData), req.body._id]
+    );
+    // Send rejection email
+    // const mailOptions = { ... };
+    // transporter.sendMail...
+    res.status(200).send();
+  } catch (err) {
+    console.log(err);
+    res.status(500).send();
+  }
 });
 app.post("/deletegroup", authenticate, async (req, res) => {
   console.log("GROUP ID RECEIVED");
   console.log(req.body._id);
-  (await UserModel.find()).forEach(async (doc) => {
-    await UserModel.updateOne(
-      { _id: doc._id },
-      { $pull: { data: ObjectId(req.body._id) } }
-    ).then(console.log("deleted one record"));
-  });
-
-  await ProjectModel.deleteOne({ _id: ObjectId(req.body._id) }).then(
-    console.log("deleted from projects")
-  );
-
-  res.status(200).send();
+  try {
+    // Remove project id from all users' data
+    await pool.query(
+      'UPDATE users SET data = array_remove(data, $1)',
+      [req.body._id]
+    );
+    // Delete the project
+    await pool.query('DELETE FROM projects WHERE id = $1', [req.body._id]);
+    res.status(200).send();
+  } catch (err) {
+    console.log(err);
+    res.status(500).send();
+  }
 });
 
 app.listen(process.env.PORT || 3001, () => {

@@ -1,11 +1,12 @@
 const jwt = require("jsonwebtoken");
-const UserModel = require("../models/user");
+const pool = require("../db");
 
 const Authenticate = async (req, res, next) => {
   try {
     const token = req.cookies.jwtoken;
     const verifyToken = jwt.verify(token, process.env.SECRET_KEY);
-    const rootUser = await UserModel.findOne({ _id: verifyToken._id });
+    const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [verifyToken._id]);
+    const rootUser = userResult.rows[0];
     console.log(rootUser);
     if (!rootUser) {
       throw new Error("User not found");
