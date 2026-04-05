@@ -111,7 +111,8 @@ app.post("/login", async (req, res) => {
   try {
     const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [req.body.email]);
     const user = userResult.rows[0];
-    // console.log("USER DETAILS");
+    console.log("USER DETAILS");
+    console.log(user);
     if (user && user.password == req.body.password) {
       // console.log(user);
       const token = jwt.sign({ _id: user.id }, process.env.SECRET_KEY);
