@@ -13,9 +13,11 @@ const authenticate = require("./middleware/authenticate");
 // const nodemailer = require("nodemailer");
 require("dotenv").config();
 app.use((req, res, next) => {
-  const allowedOrigins = ['http://localhost:3000',"https://finalize.netlify.app"];
+  const allowedOrigins = ['http://localhost:3000', 'https://finalize.netlify.app'];
   const incomingOrigin = req.headers.origin;
-  res.setHeader("Access-Control-Allow-Origin", incomingOrigin);
+  if (allowedOrigins.includes(incomingOrigin)) {
+    res.setHeader("Access-Control-Allow-Origin", incomingOrigin);
+  }
   res.setHeader("Access-Control-Allow-Credentials", true);
   res.setHeader(
     "Access-Control-Allow-Headers",
@@ -74,6 +76,9 @@ app.use(cookieParser());
 // });
 app.get("/", async (req, res) => {
   res.send("Hello");
+});
+app.get("/ping", (req, res) => {
+  res.json({ status: "ok", message: "Backend is running" });
 });
 app.post("/register", async (req, res) => {
   // console.log(JSON.stringify(req.body));
