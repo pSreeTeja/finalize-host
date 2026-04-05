@@ -77,9 +77,13 @@ app.use(cookieParser());
 app.get("/", async (req, res) => {
   res.send("Hello");
 });
+
+
 app.get("/ping", (req, res) => {
   res.json({ status: "ok", message: "Backend is running" });
 });
+
+
 app.post("/register", async (req, res) => {
   // console.log(JSON.stringify(req.body));
   try {
@@ -106,6 +110,8 @@ app.post("/register", async (req, res) => {
     console.log(err);
   }
 });
+
+
 app.post("/login", async (req, res) => {
   // console.log("SECRET  :" + vars.pass);
   try {
@@ -133,6 +139,8 @@ app.post("/login", async (req, res) => {
     res.status(401).json({ error: "Login failed" });
   }
 });
+
+
 app.get("/isAuthenticated", authenticate, (req, res) => {
   if (req.status == 200) {
     res.status = 200;
@@ -141,9 +149,13 @@ app.get("/isAuthenticated", authenticate, (req, res) => {
   res.status = 401;
   res.send();
 });
+
+
 app.get("/data", authenticate, (req, res) => {
   res.send(req.rootUser);
 });
+
+
 app.get("/logout", (req, res) => {
   // res.clearCookie("jwtoken", { path: "/" });
   res.cookie("jwtoken", "", {
@@ -153,7 +165,11 @@ app.get("/logout", (req, res) => {
   });
   res.status(200).send("Logged Out");
 });
+
+
 app.post("/forgotpassword", (req, res) => {});
+
+
 app.post("/creategroupapi", authenticate, async (req, res) => {
   // console.log(req.rootUser);
   // console.log(req.body);
@@ -167,9 +183,10 @@ app.post("/creategroupapi", authenticate, async (req, res) => {
       'UPDATE projects SET link = $1 WHERE id = $2',
       [`http://finalize.netlify.app/invite/${projectId}`, projectId]
     );
+
     await pool.query(
-      'UPDATE users SET data = data || $1 WHERE id = $2',
-      [[projectId], req.rootUser.id]
+      'UPDATE users SET data = data || $1::jsonb WHERE id = $2',
+      [JSON.stringify([projectId]), req.rootUser.id]
     );
     res.status(200).send();
   } catch (err) {
@@ -177,6 +194,8 @@ app.post("/creategroupapi", authenticate, async (req, res) => {
     res.status(500).send();
   }
 });
+
+
 app.get("/displaygroups", authenticate, async (req, res) => {
   // console.log(req.rootUser);
   try {
@@ -195,6 +214,7 @@ app.get("/displaygroups", authenticate, async (req, res) => {
   }
 });
 
+
 app.post("/invite", authenticate, async (req, res) => {
   console.log("IN INVITE API");
   try {
@@ -208,6 +228,8 @@ app.post("/invite", authenticate, async (req, res) => {
     res.status(500).send();
   }
 });
+
+
 app.post("/addstudentproject", authenticate, async (req, res) => {
   // console.log("RECEIVED FROM CLIENT");
   // console.log(req.body);
@@ -235,6 +257,8 @@ app.post("/addstudentproject", authenticate, async (req, res) => {
     res.status(500).send();
   }
 });
+
+
 app.post("/updatestudentproject", authenticate, async (req, res) => {
   try {
     const projectResult = await pool.query('SELECT submitted_data FROM projects WHERE id = $1', [req.body._id]);
@@ -270,6 +294,8 @@ app.post("/updatestudentproject", authenticate, async (req, res) => {
     res.status(500).send();
   }
 });
+
+
 app.post("/submitProject", authenticate, async (req, res) => {
   try {
     const projectResult = await pool.query('SELECT submitted_data FROM projects WHERE id = $1', [req.body._id]);
@@ -300,6 +326,8 @@ app.post("/submitProject", authenticate, async (req, res) => {
     res.status(500).send();
   }
 });
+
+
 app.post("/rejectproject", authenticate, async (req, res) => {
   try {
     const projectResult = await pool.query('SELECT submitted_data FROM projects WHERE id = $1', [req.body._id]);
@@ -318,6 +346,8 @@ app.post("/rejectproject", authenticate, async (req, res) => {
     res.status(500).send();
   }
 });
+
+
 app.post("/deletegroup", authenticate, async (req, res) => {
   console.log("GROUP ID RECEIVED");
   console.log(req.body._id);
@@ -335,6 +365,7 @@ app.post("/deletegroup", authenticate, async (req, res) => {
     res.status(500).send();
   }
 });
+
 
 app.listen(process.env.PORT || 3001, () => {
   console.log("Server started");
