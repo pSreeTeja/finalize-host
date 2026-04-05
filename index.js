@@ -17,8 +17,8 @@ app.use((req, res, next) => {
   const incomingOrigin = req.headers.origin;
   if (allowedOrigins.includes(incomingOrigin)) {
     res.setHeader("Access-Control-Allow-Origin", incomingOrigin);
+    res.setHeader("Access-Control-Allow-Credentials", true);
   }
-  res.setHeader("Access-Control-Allow-Credentials", true);
   res.setHeader(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept"
@@ -124,12 +124,13 @@ app.post("/login", async (req, res) => {
         secure: true,
         sameSite: "none",
       });
-      res.status(200).send();
+      res.status(200).json({ message: "Login successful", userId: user.id });
     } else {
-      res.status(401).send();
+      res.status(401).json({ error: "Invalid credentials" });
     }
   } catch (err) {
-    res.status(401).send();
+    console.error("Login error:", err);
+    res.status(401).json({ error: "Login failed" });
   }
 });
 app.get("/isAuthenticated", authenticate, (req, res) => {
